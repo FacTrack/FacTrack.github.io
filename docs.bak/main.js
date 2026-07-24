@@ -1,8 +1,7 @@
 /* ==========================================================
    Elenchon by Delteris — landing page behavior
-   1. Mobile navigation toggle
-   2. Copy-to-clipboard on the contact page
-   3. Ambient network canvas (brand blue #3b82f6)
+   1. Ambient network canvas (brand blue #3b82f6)
+   2. Mobile navigation toggle
    ========================================================== */
 
 (function () {
@@ -29,31 +28,6 @@
         });
     }
 
-    /* ---------- Copy-to-clipboard (contact page) ---------- */
-    const copyBtn = document.getElementById('copy-email');
-
-    if (copyBtn) {
-        copyBtn.addEventListener('click', function () {
-            const address = copyBtn.dataset.email;
-            const restore = function () {
-                copyBtn.textContent = address;
-            };
-
-            const confirm = function () {
-                copyBtn.textContent = 'Copied \u2713';
-                setTimeout(restore, 2000);
-            };
-
-            if (navigator.clipboard && navigator.clipboard.writeText) {
-                navigator.clipboard.writeText(address).then(confirm).catch(function () {
-                    window.location.href = 'mailto:' + address;
-                });
-            } else {
-                window.location.href = 'mailto:' + address;
-            }
-        });
-    }
-
     /* ---------- Ambient network canvas ---------- */
     const canvas = document.getElementById('network-canvas');
     if (!canvas) return;
@@ -66,35 +40,25 @@
     let particles = [];
     let animationId = null;
 
-    const CONNECTION_DISTANCE = 160;
+    const CONNECTION_DISTANCE = 150;
     const BLUE = '59, 130, 246'; // #3b82f6
-    const FRAME_INTERVAL = 1000 / 30; // 30fps is plenty for an ambient backdrop
-
-    let lastFrame = 0;
 
     function particleCount() {
-        // Restrained density — the backdrop should never compete with the copy
-        return window.innerWidth < 768 ? 24 : 52;
+        // Fewer particles on small screens to keep scrolling smooth
+        return window.innerWidth < 768 ? 35 : 80;
     }
 
     function resize() {
-        // Render at device resolution so dots and lines stay crisp on retina
-        const dpr = Math.min(window.devicePixelRatio || 1, 2);
-        width = window.innerWidth;
-        height = window.innerHeight;
-        canvas.width = Math.round(width * dpr);
-        canvas.height = Math.round(height * dpr);
-        canvas.style.width = width + 'px';
-        canvas.style.height = height + 'px';
-        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        width = canvas.width = window.innerWidth;
+        height = canvas.height = window.innerHeight;
     }
 
     function Particle() {
         this.x = Math.random() * width;
         this.y = Math.random() * height;
-        this.vx = (Math.random() - 0.5) * 0.34;
-        this.vy = (Math.random() - 0.5) * 0.34;
-        this.radius = Math.random() * 1.1 + 0.9;
+        this.vx = (Math.random() - 0.5) * 0.5;
+        this.vy = (Math.random() - 0.5) * 0.5;
+        this.radius = Math.random() * 1.5 + 1;
     }
 
     Particle.prototype.update = function () {
@@ -107,7 +71,7 @@
     Particle.prototype.draw = function () {
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(' + BLUE + ', 0.34)';
+        ctx.fillStyle = 'rgba(' + BLUE + ', 0.5)';
         ctx.fill();
     };
 
@@ -131,7 +95,7 @@
                     ctx.beginPath();
                     ctx.moveTo(particles[i].x, particles[i].y);
                     ctx.lineTo(particles[j].x, particles[j].y);
-                    ctx.strokeStyle = 'rgba(' + BLUE + ', ' + opacity * 0.12 + ')';
+                    ctx.strokeStyle = 'rgba(' + BLUE + ', ' + opacity * 0.2 + ')';
                     ctx.lineWidth = 1;
                     ctx.stroke();
                 }
@@ -148,11 +112,9 @@
         drawConnections();
     }
 
-    function animate(now) {
-        animationId = requestAnimationFrame(animate);
-        if (now - lastFrame < FRAME_INTERVAL) return;
-        lastFrame = now;
+    function animate() {
         drawFrame();
+        animationId = requestAnimationFrame(animate);
     }
 
     let resizeTimer = null;
